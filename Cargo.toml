@@ -1,0 +1,18 @@
+[package]
+name = "zerokit_arch_design"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ark-bn254 = { version = "0.5.0", features = ["std"] }
+ark-relations = { version = "0.5.1", default-features = false, features = ["std"] }
+ark-ff = { version = "0.5.0", default-features = false, features = ["asm"] }
+ark-groth16 = { version = "0.5.0", default-features = false, features = [] }
+ark-serialize = { version = "0.5.0", default-features = false, features = [] }
+ark-poly = { version = "0.5.0", default-features = false, features = [] }
+thiserror = "2.0.18"
+num-bigint = "0.4.6"
+ark-std = "0.5.0"
+
+[features]
+stateless = []
