@@ -5,6 +5,7 @@ mod se_de;
 mod zk_proof;
 mod qap;
 mod partial_zk_proof;
+mod zk_proof_with_graph;
 
 use std::collections::HashMap;
 use std::fmt::{Debug, Display};
@@ -16,7 +17,7 @@ use crate::error::ZerokitMerkleTreeError;
 use crate::partial_zk_proof::{MyPartialZkProof, PartialWitness, RLNPartialZkProof};
 use crate::tree::{ZerokitMerkleTree, ZerokitMerkleProof, MyTree, MyTreeProof};
 use crate::zk_proof::{MyZkProof, RLNZkProof, RecoverSecret2, Witness, WitnessSingle};
-
+use crate::zk_proof_with_graph::{MyZkProofGraphLess, RLNZkProofWithGraph};
 /*
 pub trait WitnessCompute {
     fn calc_witness(&self, inputs: HashMap<String, Vec<Fr>>) -> Result<Vec<Fr>, String>;
@@ -54,8 +55,16 @@ struct RLN<Mode, ZKP> {
 impl<Mode, ZKP: RLNZkProof> RLN<Mode, ZKP> {
 
     // Common methods for Stateless & Stateful
-    fn generate_proof(&self, witness: ZKP::Witness) -> (ZKP::Proof, ZKP::Values) {
-        self.zk_proof.generate_proof_and_values(witness)
+    fn generate_proof(&self, witness: ZKP::Witness, evaluated_witness: ZKP::EvaluatedWitness) -> (ZKP::Proof, ZKP::Values) {
+        self.zk_proof.generate_proof_and_values(witness, evaluated_witness)
+    }
+}
+
+impl<Mode, ZKP: RLNZkProofWithGraph> RLN<Mode, ZKP> {
+
+    // Common methods for Stateless & Stateful
+    fn generate_proof_from_witness(&self, witness: ZKP::Witness) -> (ZKP::Proof, ZKP::Values) {
+        self.zk_proof.generate_proof_from_witness(witness)
     }
 }
 
@@ -135,9 +144,10 @@ fn main() {
         message_id: Fr::from(0),
     });
 
-    let (p1, pv1) = r1.generate_proof(witness.clone());
-    println!("gen proof: {:?} --- {:?}", p1, pv1);
-    let (p2, pv2) = r1.generate_proof(witness.clone());
+    // let (p1, pv1) = r1.generate_proof(witness.clone(), vec![]);
+    // println!("gen proof: {:?} --- {:?}", p1, pv1);
+    let (p1, pv1) = r1.generate_proof_from_witness(witness.clone());
+    let (p2, pv2) = r1.generate_proof(witness.clone(), vec![]);
     let id_secret = pv1.recover_secret(&pv2);
     println!("Recovered secret from pv1 & pv2: {:?}", id_secret);
 
@@ -156,7 +166,7 @@ fn main() {
 
     println!("RLN 2:");
     println!("{:#?}", r2);
-    println!("gen proof - stateless: {:#?}", r2.generate_proof(witness.clone()));
+    println!("gen proof - stateless: {:#?}", r2.generate_proof(witness.clone(), vec![]));
     println!("{}", "#".repeat(8));
 
     // stateless + partial proof support
@@ -173,4 +183,11 @@ fn main() {
     println!("{:#?}", r2_2);
     println!("gen partial proof - stateless: {:#?}", r2_2.generate_partial_proof(partial_witness));
     println!("{}", "#".repeat(8));
+
+    // stateless + graphless
+    let r3_1: RLN<Stateless, MyZkProofGraphLess> = RLN::new_stateless(MyZkProofGraphLess::new());
+    r3_1.generate_proof(witness.clone(), vec![]);
+    // Cannot call this...
+    // r3_1.generate_partial_proof(witness.clone());
+    // r3_1.generate_proof_from_witness(witness);
 }

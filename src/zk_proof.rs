@@ -5,7 +5,7 @@ use ark_bn254::{Bn254, Fr};
 use ark_groth16::{Groth16, Proof};
 use ark_serialize::{CanonicalSerialize, CanonicalDeserialize, Compress, SerializationError, Validate, Valid};
 use crate::se_de::{CanonicalDeserializeBE, CanonicalSerializeBE};
-
+use crate::zk_proof_with_graph::{GraphEval, RLNZkProofWithGraph};
 /*
 pub trait RecoverSecret {
     fn recover_secret(&self) -> Fr; // Should be IdSecret
@@ -43,23 +43,27 @@ pub enum Endianess {
 pub trait RLNZkProof {
 
     type Witness: CanonicalSerialize + CanonicalDeserialize + CanonicalSerializeBE + CanonicalDeserializeBE;
+    type EvaluatedWitness; // Should have trait bounds: CanonicalSerialize + CanonicalDeserialize + CanonicalSerializeBE + CanonicalDeserializeBE;
 
     type Proof: CanonicalSerialize + CanonicalDeserialize;
     type Values: RecoverSecret2 + CanonicalSerialize + CanonicalDeserialize + TryFrom<Self::Witness> + CanonicalSerializeBE + CanonicalDeserializeBE;
 
     fn verify(&self) -> Result<bool, String>;
 
-    fn generate_proof() -> Self::Proof;
-    fn generate_proof_and_values(&self, wtiness: Self::Witness) -> (Self::Proof, Self::Values);
+    // fn generate_proof() -> Self::Proof;
+    fn generate_proof_and_values(&self, witness: Self::Witness, evaluated_witness: Self::EvaluatedWitness) -> (Self::Proof, Self::Values);
 
     fn proof() -> Self::Proof;
 
     fn values() -> Self::Values;
 
+    /*
     // For Waku / ...
     fn to_bytes(&self, values_endian: Endianess) -> Vec<u8>;
     fn from_bytes(&self, values_endian: Endianess) -> Vec<u8>;
+    */
 }
+
 
 // impl
 
@@ -88,16 +92,18 @@ impl RLNZkProof for MyZkProof {
     type Proof = Proof<Bn254>;
     type Values = ProofValues;
     type Witness = Witness;
+    type EvaluatedWitness = Vec<Fr>;
 
     fn verify(&self) -> Result<bool, String> {
         todo!()
     }
 
-    fn generate_proof() -> Self::Proof {
+    /* fn generate_proof() -> Self::Proof {
         todo!()
     }
+    */
 
-    fn generate_proof_and_values(&self, witness: Self::Witness) -> (Self::Proof, Self::Values) {
+    fn generate_proof_and_values(&self, witness: Self::Witness, evaluated_witness: Self::EvaluatedWitness) -> (Self::Proof, Self::Values) {
         let proof_values = ProofValues::try_from(witness).unwrap();
         let proof = {
 
@@ -128,11 +134,34 @@ impl RLNZkProof for MyZkProof {
         todo!()
     }
 
+    /*
     fn to_bytes(&self, values_endian: Endianess) -> Vec<u8> {
         todo!()
     }
 
     fn from_bytes(&self, values_endian: Endianess) -> Vec<u8> {
+        todo!()
+    }
+    */
+}
+
+impl RLNZkProofWithGraph for MyZkProof {
+    fn evaluate_witness(&self, witness: &Self::Witness) -> Result<Self::EvaluatedWitness, String> {
+        println!("Evaluating witness...");
+        Ok(vec![])
+    }
+
+    fn generate_proof_from_witness(&self, witness: Self::Witness) -> (Self::Proof, Self::Values) {
+
+        let ewit = self.evaluate_witness(&witness).unwrap();
+        self.generate_proof_and_values(witness, ewit)
+    }
+}
+
+struct MyEvalWitness {}
+
+impl GraphEval<Witness> for MyZkProof {
+    fn eval_witness(&self, witness: &Witness) -> Result<Fr, String> {
         todo!()
     }
 }

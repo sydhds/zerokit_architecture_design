@@ -34,16 +34,18 @@ impl RLNZkProof for MyPartialZkProof {
     type Proof = Proof<Bn254>;
     type Values = ProofValues;
     type Witness = Witness;
+    type EvaluatedWitness = Vec<Fr>;
 
     fn verify(&self) -> Result<bool, String> {
         todo!()
     }
 
-    fn generate_proof() -> Self::Proof {
+    /* fn generate_proof() -> Self::Proof {
         todo!()
     }
-
-    fn generate_proof_and_values(&self, witness: Self::Witness) -> (Self::Proof, Self::Values) {
+    */
+    
+    fn generate_proof_and_values(&self, witness: Self::Witness, evaluated_witness: Self::EvaluatedWitness) -> (Self::Proof, Self::Values) {
         let proof_values = ProofValues::try_from(witness).unwrap();
         let proof = {
 
@@ -74,6 +76,7 @@ impl RLNZkProof for MyPartialZkProof {
         todo!()
     }
 
+    /*
     fn to_bytes(&self, values_endian: Endianess) -> Vec<u8> {
         todo!()
     }
@@ -81,6 +84,7 @@ impl RLNZkProof for MyPartialZkProof {
     fn from_bytes(&self, values_endian: Endianess) -> Vec<u8> {
         todo!()
     }
+    */
 }
 
 impl RLNPartialZkProof for MyPartialZkProof {
